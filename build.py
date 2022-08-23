@@ -30,10 +30,20 @@ def find_ndk():
                 candidates[v] = ndk_root
         return candidates
 
-def clean(project_path=os.path.join('src', 'zygisk','module')):
-    shutil.rmtree(os.path.join(project_path, 'obj'))
-    shutil.rmtree(os.path.join(project_path, 'libs'))
-    shutil.rmtree(os.path.join(project_path, 'build'))
+def clean(
+    project_path=os.path.join('src', 'zygisk','module')):
+    try:
+        shutil.rmtree(os.path.join(project_path, 'obj'))
+    except FileNotFoundError:
+        pass
+    try:
+        shutil.rmtree(os.path.join(project_path, 'libs'))
+    except FileNotFoundError:
+        pass
+    try:
+        shutil.rmtree(os.path.join(project_path, 'build'))
+    except FileNotFoundError:
+        pass
 
 
 def build(project_path, use_low=False):
@@ -54,8 +64,22 @@ def build(project_path, use_low=False):
         'make a hoice by tying in which version you would like to use. '
         'proceeds automatically with higest version after 10 seconds'
     )
-    i, o, e = select.select( [sys.stdin], [], [], 10 )
-    if(i):
+
+    
+
+    from threading import Timer
+   
+    i = len(menu) - 1
+    try:
+        def boom():
+            raise Exception("no choice has been made, we choose option 1 for you")
+        Timer(10, boom).start()
+        i = int(input(f'make a choice. current: {i} :'))
+
+    except Exception:
+        pass
+
+    if i:
         print('choice confirmed')
         choice = menu[i]
     else:
@@ -79,15 +103,15 @@ import argparse
 parser = argparse.ArgumentParser(prog='build script', 
                                  epilog=f'examples:\n\n .{os.sep}{sys.argv[0]} build \n .{os.sep}{sys.argv[0]} clean',
                                  formatter_class=argparse.RawTextHelpFormatter)
-parser.set_defaults(build=False, clean=False)
+parser.set_defaults(build=True, clean=True, oldest=True)
 
 subparsers = parser.add_subparsers()
-subparser1 = subparsers.add_parser('build', help="bong3")
-subparser2 = subparsers.add_parser('clean', help="bong2")
-subparser3 = subparsers.add_parser('oldest', help="bong1")
+subparser1 = subparsers.add_parser('build', help="build the module")
+subparser2 = subparsers.add_parser('clean', help="cleanup the intermediate files")
+subparser3 = subparsers.add_parser('oldest', help="use oldest version of nkd which we can find")
 
 subparser1.set_defaults(build=True)
-subparser2.set_defaults(clean=True)
+subparser2.set_defaults(clean=False)
 subparser3.set_defaults(oldest=True)
 
 args = parser.parse_args()
@@ -95,13 +119,13 @@ args = parser.parse_args()
 if __name__ == '__main__':
 
     print(args)
-    exit()
     # if no command is set, assume we need to build
     use_low = False
     if not args.clean ^ args.build:
         args.build = True
-    if args.low:
+    if args.oldest:
         use_low = True
+    
     if args.clean:
         print(clean('src/zygisk/module'))
 
