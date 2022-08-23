@@ -1,0 +1,3 @@
+[submodule "src/zygisk-module-sample"]
+	path = src/zygisk-module-sample
+	url = https://github.com/topjohnwu/zygisk-module-sample
